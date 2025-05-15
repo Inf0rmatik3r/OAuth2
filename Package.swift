@@ -36,8 +36,7 @@ let package = Package(
 	targets: [
 		.target(name: "OAuth2",
 			dependencies: ["Base", "Flows", "DataLoader"]),
-		.target(name: "SwiftKeychain"),
-		.target(name: "Base", dependencies: [.target(name: "SwiftKeychain")]),
+		.target(name: "Base", dependencies: []),
 		.target(name: "macOS", dependencies: [.target(name: "Base")]),
 		.target(name: "iOS", dependencies: [.target(name: "Base")]),
 		.target(name: "tvOS", dependencies: [.target(name: "Base")]),

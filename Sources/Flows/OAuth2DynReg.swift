@@ -178,10 +178,6 @@ open class OAuth2DynReg {
 		if let methodName = json["token_endpoint_auth_method"] as? String, let method = OAuth2EndpointAuthMethod(rawValue: methodName) {
 			client.clientConfig.endpointAuthMethod = method
 		}
-		
-		if client.useKeychain {
-			client.storeClientToKeychain()
-		}
 	}
 }
 

@@ -198,38 +198,6 @@ open class OAuth2Base: OAuth2Securable {
 	}
 	
 	
-	// MARK: - Keychain Integration
-	
-	/** Overrides base implementation to return the authorize URL. */
-	override open func keychainServiceName() -> String {
-		return authURL.description
-	}
-	
-	override open func updateFromKeychainItems(_ items: [String: Any]) {
-		for message in clientConfig.updateFromStorableItems(items) {
-			logger?.debug("OAuth2", msg: message)
-		}
-		clientConfig.secretInBody = (clientConfig.endpointAuthMethod == OAuth2EndpointAuthMethod.clientSecretPost)
-	}
-	
-	override open func storableCredentialItems() -> [String: Any]? {
-		return clientConfig.storableCredentialItems()
-	}
-	
-	override open func storableTokenItems() -> [String: Any]? {
-		return clientConfig.storableTokenItems()
-	}
-	
-	override open func forgetClient() {
-		super.forgetClient()
-		clientConfig.forgetCredentials()
-	}
-	
-	override open func forgetTokens() {
-		super.forgetTokens()
-		clientConfig.forgetTokens()
-	}
-	
 	
 	// MARK: - Request Signing
 	
@@ -270,9 +238,6 @@ open class OAuth2Base: OAuth2Securable {
 	- parameter withParameters: The parameters received during authorization
 	*/
 	public final func didAuthorize(withParameters parameters: OAuth2JSON) {
-		if useKeychain {
-			storeTokensToKeychain()
-		}
 		callOnMainThread() {
 			self.didAuthorizeOrFail?(parameters, nil)
 			self.didAuthorizeOrFail = nil

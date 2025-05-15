@@ -30,19 +30,12 @@ open class OAuth2Securable: OAuth2Requestable {
 	final let settings: OAuth2JSON
 	
 	/// If set to `true` (the default) will use system keychain to store tokens. Use `"keychain": bool` in settings.
-	public var useKeychain = true {
-		didSet {
-			if useKeychain {
-				updateFromKeychain()
-			}
-		}
-	}
+	public var useKeychain = false
 	
 	/// The keychain account to use to store tokens. Defaults to "currentTokens".
 	open var keychainAccountForTokens = "currentTokens" {
 		didSet {
 			assert(!keychainAccountForTokens.isEmpty)
-			updateFromKeychain()
 		}
 	}
 	
@@ -91,117 +84,6 @@ open class OAuth2Securable: OAuth2Requestable {
 			verbose = verb
 		}
 		super.init(verbose: verbose)
-		
-		// init from keychain
-		if useKeychain {
-			updateFromKeychain()
-		}
-	}
-	
-	
-	// MARK: - Keychain Integration
-	
-	/** The service key under which to store keychain items. Returns "http://localhost", subclasses override to return the authorize URL. */
-	open func keychainServiceName() -> String {
-		return "http://localhost"
-	}
-	
-	/** Queries the keychain for tokens stored for the receiver's authorize URL, and updates the token properties accordingly. */
-	private func updateFromKeychain() {
-		logger?.debug("OAuth2", msg: "Looking for items in keychain")
-		
-		do {
-			var creds = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForClientCredentials)
-			let creds_data = try creds.fetchedFromKeychain()
-			updateFromKeychainItems(creds_data)
-		}
-		catch {
-			logger?.warn("OAuth2", msg: "Failed to load client credentials from keychain: \(error)")
-		}
-		
-		do {
-			var toks = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForTokens)
-			let toks_data = try toks.fetchedFromKeychain()
-			updateFromKeychainItems(toks_data)
-		}
-		catch {
-			logger?.warn("OAuth2", msg: "Failed to load tokens from keychain: \(error)")
-		}
-	}
-	
-	/** Updates instance properties according to the items found in the given dictionary, which was found in the keychain. */
-	func updateFromKeychainItems(_ items: [String: Any]) {
-	}
-	
-	/**
-	Items that should be stored when storing client credentials.
-	
-	- returns: A dictionary with `String` keys and `Any` items
-	*/
-	open func storableCredentialItems() -> [String: Any]? {
-		return nil
-	}
-	
-	/** Stores our client credentials in the keychain. */
-	open func storeClientToKeychain() {
-		if let items = storableCredentialItems() {
-			logger?.debug("OAuth2", msg: "Storing client credentials to keychain")
-			let keychain = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForClientCredentials, data: items)
-			do {
-				try keychain.saveInKeychain()
-			}
-			catch {
-				logger?.warn("OAuth2", msg: "Failed to store client credentials to keychain: \(error)")
-			}
-		}
-	}
-	
-	/**
-	Items that should be stored when tokens are stored to the keychain.
-	
-	- returns: A dictionary with `String` keys and `Any` items
-	*/
-	open func storableTokenItems() -> [String: Any]? {
-		return nil
-	}
-	
-	/** Stores our current token(s) in the keychain. */
-	public func storeTokensToKeychain() {
-		if let items = storableTokenItems() {
-			logger?.debug("OAuth2", msg: "Storing tokens to keychain")
-			let keychain = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForTokens, data: items)
-			do {
-				try keychain.saveInKeychain()
-			}
-			catch let error {
-				logger?.warn("OAuth2", msg: "Failed to store tokens to keychain: \(error)")
-			}
-		}
-	}
-	
-	/** Unsets the client credentials and deletes them from the keychain. */
-	open func forgetClient() {
-		logger?.debug("OAuth2", msg: "Forgetting client credentials and removing them from keychain")
-		let keychain = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForClientCredentials)
-		do {
-			try keychain.removeFromKeychain()
-		}
-		catch {
-			logger?.warn("OAuth2", msg: "Failed to delete credentials from keychain: \(error)")
-		}
-	}
-	
-	/** Unsets the tokens and deletes them from the keychain. */
-	open func forgetTokens() {
-		logger?.debug("OAuth2", msg: "Forgetting tokens and removing them from keychain")
-
-		let keychain = OAuth2KeychainAccount(oauth2: self, account: keychainAccountForTokens)
-		do {
-			try keychain.removeFromKeychain()
-		}
-		catch {
-			logger?.warn("OAuth2", msg: "Failed to delete tokens from keychain: \(error)")
-		}
 	}
 }
 
