@@ -19,8 +19,8 @@
 //
 
 import Foundation
-import CommonCrypto
-
+import Crypto
+import _CryptoExtras
 
 /**
 Class extending on OAuth2Requestable, exposing configuration and maintaining context, serving as base class for `OAuth2`.
@@ -499,20 +499,16 @@ open class OAuth2ContextStore {
 	}
 	
 	
-	open func codeChallenge() -> String? {
-		guard let verifier = codeVerifier, let data = verifier.data(using: .utf8) else { return nil }
-		var buffer = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
-		data.withUnsafeBytes {
-			_ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &buffer)
-		}
-		let hash = Data(buffer)
-		let challenge = hash.base64EncodedString()
-			.replacingOccurrences(of: "+", with: "-")
-			.replacingOccurrences(of: "/", with: "_")
-			.replacingOccurrences(of: "=", with: "")
-			.trimmingCharacters(in: .whitespaces)
-		return challenge
-	}
+    open func codeChallenge() -> String? {
+        guard let verifier = codeVerifier, let data = verifier.data(using: .utf8) else { return nil }
+        let hash = Data(SHA256.hash(data: data))
+        let challenge = hash.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        return challenge
+    }
 	
 }
 

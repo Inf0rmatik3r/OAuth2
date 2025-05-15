@@ -32,11 +32,12 @@ let package = Package(
 	dependencies: [
 		// SwiftKeychain is not yet available as a Package, so we symlink to /Sources and make it a Target
 		//.package(url: "https://github.com/yankodimitrov/SwiftKeychain.git", majorVersion: 1),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
 	],
 	targets: [
 		.target(name: "OAuth2",
 			dependencies: ["Base", "Flows", "DataLoader"]),
-		.target(name: "Base", dependencies: []),
+        .target(name: "Base", dependencies: [.product(name: "Crypto", package: "swift-crypto"), .product(name: "_CryptoExtras", package: "swift-crypto")]),
 		.target(name: "macOS", dependencies: [.target(name: "Base")]),
 		.target(name: "iOS", dependencies: [.target(name: "Base")]),
 		.target(name: "tvOS", dependencies: [.target(name: "Base")]),
